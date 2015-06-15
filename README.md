@@ -1,7 +1,7 @@
 speedy-diff
 ===========
 
-Compare to files with diff and create a file from the difference.
+Compare two files with diff and create a file from the difference.
 
 Installation via Composer:
 
