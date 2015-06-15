@@ -1,7 +1,7 @@
 {
     "name": "jasonbradley/speedy-diff",
     "description": "Quickly generate a diff of two files.",
-    "keywords": ["cli","command-line"],
+    "keywords": ["diff","compare files"],
     "homepage": "http://github.com/jasonbradley/speedy-diff",
     "type": "library",
     "license": "Apache-2.0",
