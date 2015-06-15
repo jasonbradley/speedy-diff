@@ -1,4 +1,4 @@
-speedy-diff
+speedy-diff https://travis-ci.org/jasonbradley/speedy-diff.svg?branch=master
 ===========
 
 Compare two files with diff and create a file from the difference.
