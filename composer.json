@@ -1,0 +1,17 @@
+{
+    "name": "jasonbradley/speedy-diff",
+    "description": "Quickly generate a diff of two files.",
+    "keywords": ["cli","command-line"],
+    "homepage": "http://github.com/jasonbradley/speedy-diff",
+    "type": "library",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Jason Bradley",
+            "email": "jason.bradley@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    }
+}

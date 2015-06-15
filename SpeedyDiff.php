@@ -1,108 +1,161 @@
 <?php
+
+namespace JasonBradley\SpeedyDiff;
+
+require_once './Exceptions/DiffException.php';
+
+use JasonBradley\SpeedyDiff\Exceptions\DiffException;
+
 /**
  * @author Jason Bradley
  *
- *  Creates a diff of two files from large files
+ *  Quickly creates a diff of two files from large files using
+ *  the Linux "diff" command.
+ *
+ *  Usage:
+ *  $speedyDiff = new \JasonBradley\SpeedyDiff\SpeedyDiff($file1, $file2);
+ *
+ *  echo $speedyDiff->getDiffOutput();
  */
 class SpeedyDiff
 {
+    /** @var string $file1 **/
     protected $file1;
-    protected $file2;
-    
-    protected $diff_file = '';
-    protected $has_difference = false;
-    
-    public function __construct($file1, $file2))
-    {
-        if (!is_file($file1) || !is_file($file2))
-        {
-            throw new Exception("Provide two files.");
-        }
 
-        
+    /** @var string $file2 **/
+    protected $file2;
+
+    /** @var string $diffFile **/
+    protected $diffFile = '';
+
+    /** @var bool $hasDifference **/
+    protected $hasDifference = false;
+
+    /**
+     * @param string $file1 First File
+     * @param string $file2 Second File
+     */
+    public function __construct($file1, $file2)
+    {
         $this->file1 = $file1;
         $this->file2 = $file2;
-        
+
+        $this->validateFiles();
+
         $this->runDiff();
     }
-    
-    protected function createDiffFile($tmp_file)
+
+    /**
+     * Ensure we have two valid files.
+     *
+     * @throws \JasonBradley\SpeedyDiff\Exceptions\DiffException
+     */
+    protected function validateFiles()
     {
-        if (!is_file($tmp_file))
-        {
-            throw new Exception("No diff file provided.");
+        if (!is_file($this->file1)) {
+            throw new DiffException('File #1 is not valid.');
         }
-        
-        $this->diff_file = tempnam('/tmp', 'speeddifffinal');
 
-        $tmp_diff_handle = fopen($tmp_file, 'r');
-        $diff_file_handle = fopen($this->diff_file, 'a');
+        if (!is_file($this->file2)) {
+            throw new DiffException('File #2 is not valid.');
+        }
+    }
 
-        while (($line = fgets($tmp_diff_handle)) !== false) 
-        {
-            $first_char = substr($line, 0, 1);
-            
-            if ($first_char == '>')
-            {
-                fwrite($diff_file_handle, substr($line, 2));
+    /**
+     * Generate the diff file.
+     *
+     * @param string $tmpFile File to write diff to
+     *
+     * @throws \JasonBradley\SpeedyDiff\Exceptions\DiffException
+     */
+    protected function createDiffFile($tmpFile)
+    {
+        if (!is_file($tmpFile)) {
+            throw new DiffException('No diff file provided.');
+        }
+
+        $this->diffFile = tempnam('/tmp', 'speeddifffinal');
+
+        $tmpDiffFileHandle = fopen($tmpFile, 'r');
+        $diffFileHandle = fopen($this->diffFile, 'a');
+
+        while (($line = fgets($tmpDiffFileHandle)) !== false) {
+            $firstChar = substr($line, 0, 1);
+
+            if ($firstChar == '>') {
+                fwrite($diffFileHandle, substr($line, 2));
             }
         }
-        
-        fclose($tmp_diff_handle);
-        fclose($diff_file_handle);
-        
+
+        fclose($tmpDiffFileHandle);
+        fclose($diffFileHandle);
+
         //remove the tmp file
-        unlink($tmp_file);
-        
-        if (!is_file($this->diff_file))
-        {
-            throw new Exception("There was a problem writing the new diff file.");
-        }
-        else if (file_get_contents($this->diff_file) == '')
-        {
-            throw new Exception("Nothing was written to the new diff file.");
+        unlink($tmpFile);
+
+        if (!is_file($this->diffFile)) {
+            throw new DiffException('There was a problem writing the new diff file.');
+        } elseif (file_get_contents($this->diffFile) == '') {
+            throw new DiffException('Nothing was written to the new diff file.');
         }
     }
-    
+
+    /**
+     * Run the diff command and generate the diff file from the output.
+     *
+     * @throws \JasonBradley\SpeedyDiff\Exceptions\DiffException
+     */
     protected function runDiff()
     {
-        $tmp_file = tempnam('/tmp', 'speeddiff');
-        $cmd = "diff {$this->file1} {$this->file2} --speed-large-files -b > $tmp_file";
-        exec($cmd, $output, $return_var);
-        
+        $tmpFile = tempnam('/tmp', 'speedydiff');
+        $cmd = "diff {$this->file1} {$this->file2} --speed-large-files -b > $tmpFile";
+        exec($cmd, $output, $returnVar);
+
         unset($output);
-        
-        if ($return_var > 1)
-        {
-            unlink($tmp_file);
-            throw new Exception("There was an error when calling $cmd");
-        }
-        else if (!is_file($tmp_file))
-        {
-            throw new Exception("Unable to write to tmp file, $tmp_file");
-        }
-        else if (file_get_contents($tmp_file) == '')
-        {
+
+        if ($returnVar > 1) {
+            unlink($tmpFile);
+            throw new DiffException("There was an error when calling $cmd");
+        } elseif (!is_file($tmpFile)) {
+            throw new DiffException("Unable to write to tmp file, $tmpFile");
+        } elseif (file_get_contents($tmpFile) == '') {
             return;
         }
-        
-        $this->has_difference = true;
-        
-        $this->createDiffFile($tmp_file);
+
+        $this->hasDifference = true;
+
+        $this->createDiffFile($tmpFile);
     }
-    
+
     /**
-     * Get the file created from the diff
-     * 
+     * Get the file created from the diff.
+     *
      * @return String|Boolean
      */
     public function getDiffFile()
     {
-        return (is_file($this->diff_file)) ? $this->diff_file : false;
+        return (is_file($this->diffFile)) ? $this->diffFile : false;
     }
-    
+
+    /**
+     * Get the difference between the two input files1.
+     *
+     * @return string
+     */
+    public function getDiffOutput()
+    {
+        if ($this->getDiffFile() !== false) {
+            return file_get_contents($this->getDiffFile());
+        }
+    }
+
+    /**
+     * Returns if there is a difference between the two files.
+     *
+     * @return bool
+     */
     public function getHasDifference()
     {
-        return $this->has_difference;
+        return $this->hasDifference;
     }
 }
