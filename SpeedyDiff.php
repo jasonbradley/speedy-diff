@@ -2,8 +2,6 @@
 
 namespace JasonBradley\SpeedyDiff;
 
-require_once './Exceptions/DiffException.php';
-
 use JasonBradley\SpeedyDiff\Exceptions\DiffException;
 
 /**

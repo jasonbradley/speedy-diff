@@ -1,6 +1,6 @@
 <?php
 
-require_once 'SpeedyDiff.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 use JasonBradley\SpeedyDiff\SpeedyDiff;
 
